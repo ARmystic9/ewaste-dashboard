@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Waste Blockchain Tracker</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      color: #333;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a73e8, #0d47a1);
+      color: white;
+      padding: 24px 40px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+
+    header h1 { font-size: 28px; font-weight: 700; }
+    header p  { font-size: 14px; opacity: 0.85; margin-top: 4px; }
+
+    .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      margin-bottom: 32px;
+    }
+
+    .card h2 {
+      font-size: 20px;
+      color: #1a73e8;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #e8f0fe;
+      padding-bottom: 12px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 13px; font-weight: 600; color: #555; }
+
+    .form-group input,
+    .form-group select {
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #1a73e8;
+    }
+
+    .btn-submit {
+      margin-top: 20px;
+      padding: 12px 32px;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-submit:hover { background: #1557b0; }
+    .btn-submit:disabled { background: #aaa; cursor: not-allowed; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th {
+      background: #e8f0fe;
+      color: #1a73e8;
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    tr:hover td { background: #f8f9ff; }
+
+    .tx-link {
+      color: #1a73e8;
+      text-decoration: none;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    .tx-link:hover { text-decoration: underline; }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+      font-size: 15px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #2e7d32;
+      color: white;
+      padding: 14px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: none;
+      z-index: 999;
+    }
+
+    .toast.show { display: block; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .loading { color: #1a73e8; font-size: 14px; padding: 20px; text-align: center; }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      header { padding: 16px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>♻️ E-Waste Blockchain Tracker</h1>
+  <p>Student Project — Powered by Ethereum Sepolia Testnet</p>
+</header>
+
+<div class="container">
+
+  <!-- Register Form -->
+  <div class="card">
+    <h2>📦 Register New E-Waste Item</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Item ID *</label>
+        <input type="text" id="itemId" placeholder="e.g. EW-001">
+      </div>
+      <div class="form-group">
+        <label>Item Type *</label>
+        <select id="itemType">
+          <option value="">-- Select Type --</option>
+          <option value="Laptop">Laptop</option>
+          <option value="Mobile Phone">Mobile Phone</option>
+          <option value="TV">TV</option>
+          <option value="Printer">Printer</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Weight (kg) *</label>
+        <input type="text" id="weightKg" placeholder="e.g. 2.5">
+      </div>
+      <div class="form-group">
+        <label>Operator Name *</label>
+        <input type="text" id="operatorName" placeholder="e.g. GreenOps Ltd">
+      </div>
+      <div class="form-group">
+        <label>Photo URL (optional)</label>
+        <input type="text" id="photoUrl" placeholder="https://...">
+      </div>
+    </div>
+    <button class="btn-submit" id="submitBtn" onclick="registerItem()">
+      🔗 Register on Blockchain
+    </button>
+  </div>
+
+  <!-- Items Table -->
+  <div class="card">
+    <h2>📋 Registered Items</h2>
+    <div id="tableContainer">
+      <div class="loading">Loading items...</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">✅ Item registered on blockchain!</div>
+
+<script>
+  const API_URL = "https://6c3e4812-d27a-49c8-9c2b-c6d1663879dd-00-vbkv1moolkc0.pike.replit.dev";
+
+  // Load all items on page load
+  window.onload = () => loadItems();
+
+  async function loadItems() {
+    try {
+      const res = await fetch(API_URL + "/items");
+      const items = await res.json();
+      renderTable(items);
+    } catch (err) {
+      document.getElementById("tableContainer").innerHTML =
+        '<div class="empty-state">❌ Could not connect to backend.</div>';
+    }
+  }
+
+  function renderTable(items) {
+    if (items.length === 0) {
+      document.getElementById("tableContainer").innerHTML =
+        '<div class="empty-state">No items registered yet. Add your first item above!</div>';
+      return;
+    }
+
+    let rows = items.map(item => `
+      <tr>
+        <td><strong>${item.itemId}</strong></td>
+        <td><span class="badge">${item.itemType}</span></td>
+        <td>${item.weightKg} kg</td>
+        <td>${item.operatorName}</td>
+        <td>${new Date(item.timestamp).toLocaleDateString()}</td>
+        <td>
+          ${item.blockchainTxHash
+            ? `<a class="tx-link" href="https://sepolia.etherscan.io/tx/${item.blockchainTxHash}" target="_blank">
+                ${item.blockchainTxHash.substring(0, 16)}...
+               </a>`
+            : "N/A"}
+        </td>
+      </tr>
+    `).join("");
+
+    document.getElementById("tableContainer").innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>Item ID</th>
+            <th>Type</th>
+            <th>Weight</th>
+            <th>Operator</th>
+            <th>Date</th>
+            <th>Blockchain TX</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  async function registerItem() {
+    const itemId       = document.getElementById("itemId").value.trim();
+    const itemType     = document.getElementById("itemType").value;
+    const weightKg     = document.getElementById("weightKg").value.trim();
+    const operatorName = document.getElementById("operatorName").value.trim();
+    const photoUrl     = document.getElementById("photoUrl").value.trim();
+
+    if (!itemId || !itemType || !weightKg || !operatorName) {
+      alert("Please fill in all required fields!");
+      return;
+    }
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.textContent = "⏳ Registering on blockchain...";
+
+    try {
+      const res = await fetch(API_URL + "/register-item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId, itemType, weightKg, operatorName, photoUrl })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // Clear form
+        document.getElementById("itemId").value = "";
+        document.getElementById("itemType").value = "";
+        document.getElementById("weightKg").value = "";
+        document.getElementById("operatorName").value = "";
+        document.getElementById("photoUrl").value = "";
+
+        // Show toast
+        const toast = document.getElementById("toast");
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 4000);
+
+        // Reload table
+        loadItems();
+      } else {
+        alert("Error: " + data.error);
+      }
+
+    } catch (err) {
+      alert("Failed to connect to backend: " + err.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = "🔗 Register on Blockchain";
+  }
+</script>
+
+</body>
+</html>
